@@ -39,7 +39,7 @@ Before installing from the Helm repository, ensure the GitHub Pages repository i
 2. **Trigger Chart Release**:
    - The chart-releaser action will automatically run on pushes to `main`
    - It will create the `gh-pages` branch and publish the chart
-   - You can manually trigger it by pushing changes to the `helm/` directory
+   - You can manually trigger it by pushing changes to the `charts/slaking/` directory
 
 3. **Verify Repository**:
    ```bash
@@ -70,7 +70,7 @@ helm install slaking slaking/slaking \
 ./helm-deploy.sh
 
 # Manual Helm deployment from local chart
-helm install slaking ./helm \
+helm install slaking ./charts/slaking \
   --namespace slaking \
   --create-namespace \
   --set env.SLACK_TOKEN="xoxb-your-token" \
@@ -311,7 +311,7 @@ helm upgrade slaking slaking/slaking \
 
 **Local Helm deployment:**
 ```bash
-helm upgrade slaking ./helm \
+helm upgrade slaking ./charts/slaking \
   --namespace slaking \
   --set env.LOG_LEVEL=debug
 ```

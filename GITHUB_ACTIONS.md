@@ -123,8 +123,8 @@ To customize the container build:
 
 To customize the Helm chart publishing:
 
-1. Modify `helm/Chart.yaml` for metadata
-2. Update `helm/values.yaml` for default values
+1. Modify `charts/slaking/Chart.yaml` for metadata
+2. Update `charts/slaking/values.yaml` for default values
 3. Add additional chart dependencies if needed
 4. Customize the GitHub Pages landing page in `setup-pages.yml`
 

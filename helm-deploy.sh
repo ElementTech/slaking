@@ -15,7 +15,7 @@ RELEASE_NAME="slaking"
 NAMESPACE="slaking"
 IMAGE_NAME="slaking"
 IMAGE_TAG="latest"
-HELM_CHART_PATH="./helm"
+HELM_CHART_PATH="./charts/slaking"
 
 echo -e "${BLUE}🚀 Slaking Helm Deployment Script${NC}"
 echo "=========================================="
@@ -90,7 +90,7 @@ create_values_file() {
     fi
     
     # Create values file
-    cat > helm/values-production.yaml << EOF
+    cat > charts/slaking/values-production.yaml << EOF
 # Production values for Slaking
 # Generated from .env file
 
@@ -170,7 +170,7 @@ containerSecurityContext:
       - ALL
 EOF
     
-    echo -e "${GREEN}✅ Values file created: helm/values-production.yaml${NC}"
+    echo -e "${GREEN}✅ Values file created: charts/slaking/values-production.yaml${NC}"
 }
 
 # Deploy with Helm
@@ -182,14 +182,14 @@ deploy_helm() {
         echo -e "${YELLOW}⚠️  Release ${RELEASE_NAME} already exists. Upgrading...${NC}"
         helm upgrade ${RELEASE_NAME} ${HELM_CHART_PATH} \
             --namespace ${NAMESPACE} \
-            --values helm/values-production.yaml \
+            --values charts/slaking/values-production.yaml \
             --wait \
             --timeout 10m
     else
         echo -e "${BLUE}📦 Installing new release...${NC}"
         helm install ${RELEASE_NAME} ${HELM_CHART_PATH} \
             --namespace ${NAMESPACE} \
-            --values helm/values-production.yaml \
+            --values charts/slaking/values-production.yaml \
             --wait \
             --timeout 10m
     fi
@@ -249,7 +249,7 @@ show_commands() {
     echo "  curl http://localhost:9090/metrics"
     echo ""
     echo -e "${GREEN}Update configuration:${NC}"
-    echo "  helm upgrade ${RELEASE_NAME} ${HELM_CHART_PATH} --namespace ${NAMESPACE} --values helm/values-production.yaml"
+    echo "  helm upgrade ${RELEASE_NAME} ${HELM_CHART_PATH} --namespace ${NAMESPACE} --values charts/slaking/values-production.yaml"
     echo ""
     echo -e "${GREEN}Uninstall:${NC}"
     echo "  helm uninstall ${RELEASE_NAME} -n ${NAMESPACE}"

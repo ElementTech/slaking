@@ -23,13 +23,13 @@ helm repo update
 
 ```bash
 # Install with default values
-helm install slaking ./helm
+helm install slaking ./
 
 # Install with custom values
-helm install slaking ./helm --values values-production.yaml
+helm install slaking ./ --values values-production.yaml
 
 # Install in a specific namespace
-helm install slaking ./helm --namespace slaking --create-namespace
+helm install slaking ./ --namespace slaking --create-namespace
 ```
 
 ### 3. Using the Deployment Script
@@ -191,7 +191,7 @@ containerSecurityContext:
 ### Basic Installation
 
 ```bash
-helm install slaking ./helm \
+helm install slaking ./ \
   --set env.SLACK_TOKEN="xoxb-your-token" \
   --set env.SLACK_DEFAULT_CHANNEL="#alerts"
 ```
@@ -199,7 +199,7 @@ helm install slaking ./helm \
 ### Production Installation
 
 ```bash
-helm install slaking ./helm \
+helm install slaking ./ \
   --namespace slaking \
   --create-namespace \
   --values values-production.yaml \
@@ -211,7 +211,7 @@ helm install slaking ./helm \
 ### Development Installation
 
 ```bash
-helm install slaking-dev ./helm \
+helm install slaking-dev ./ \
   --namespace development \
   --create-namespace \
   --set env.LOG_LEVEL=debug \
@@ -271,7 +271,7 @@ config:
 ### Upgrade with New Values
 
 ```bash
-helm upgrade slaking ./helm \
+helm upgrade slaking ./ \
   --namespace slaking \
   --values values-production.yaml
 ```
@@ -279,7 +279,7 @@ helm upgrade slaking ./helm \
 ### Upgrade with Specific Values
 
 ```bash
-helm upgrade slaking ./helm \
+helm upgrade slaking ./ \
   --namespace slaking \
   --set image.tag="v1.1.0" \
   --set config.slack.defaultChannel="#new-alerts"
@@ -415,7 +415,7 @@ kubectl exec -n slaking <pod-name> -- env | grep SLACK
 Enable debug logging:
 
 ```bash
-helm upgrade slaking ./helm \
+helm upgrade slaking ./ \
   --namespace slaking \
   --set env.LOG_LEVEL=debug
 ```
@@ -475,13 +475,13 @@ kubectl delete clusterrolebinding slaking-role-binding
 
 ```bash
 # Lint the chart
-helm lint ./helm
+helm lint ./
 
 # Template the chart
-helm template slaking ./helm --values values-production.yaml
+helm template slaking ./ --values values-production.yaml
 
 # Dry run installation
-helm install slaking ./helm --dry-run --debug --values values-production.yaml
+helm install slaking ./ --dry-run --debug --values values-production.yaml
 ```
 
 ## Support
