@@ -5,6 +5,33 @@ entries:
       category: Monitoring
       licenses: MIT
     apiVersion: v2
+    appVersion: 1.0.2
+    created: "2025-06-23T16:41:33.530411152Z"
+    description: A Kubernetes service that monitors workloads for annotations and
+      sends filtered logs to Slack channels
+    digest: 32dddcbcac8af2150b42545fdb9271b3fa113713b7c0aae6f0c40e93b526b9d4
+    home: https://github.com/ElementTech/slaking
+    icon: https://raw.githubusercontent.com/ElementTech/slaking/main/icon.png
+    keywords:
+    - kubernetes
+    - slack
+    - logging
+    - monitoring
+    - operator
+    maintainers:
+    - email: elementtech@example.com
+      name: ElementTech
+    name: slaking
+    sources:
+    - https://github.com/ElementTech/slaking
+    type: application
+    urls:
+    - https://github.com/ElementTech/slaking/releases/download/slaking-1.0.2/slaking-1.0.2.tgz
+    version: 1.0.2
+  - annotations:
+      category: Monitoring
+      licenses: MIT
+    apiVersion: v2
     appVersion: 1.0.1
     created: "2025-06-23T16:17:23.582659455Z"
     description: A Kubernetes service that monitors workloads for annotations and
@@ -28,4 +55,4 @@ entries:
     urls:
     - https://github.com/ElementTech/slaking/releases/download/slaking-1.0.1/slaking-1.0.1.tgz
     version: 1.0.1
-generated: "2025-06-23T16:17:23.58268352Z"
+generated: "2025-06-23T16:41:33.530422664Z"
