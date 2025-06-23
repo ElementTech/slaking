@@ -152,11 +152,11 @@ env:
 
 # Secret configuration
 secret:
-  create: true
+  create: false
   name: ""
   type: Opaque
   data:
-    slack-token: ""
+    "slack-token": ""
 
 # ConfigMap configuration
 configMap:

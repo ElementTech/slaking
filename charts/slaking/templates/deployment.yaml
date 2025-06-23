@@ -135,7 +135,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: {{ include "slaking.fullname" . }}-secrets
-              key: slack-token
+              key: "slack-token"
         {{- end }}
         {{- if .Values.configMap.create }}
         - name: CONFIG_PATH
