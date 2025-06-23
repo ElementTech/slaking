@@ -1,0 +1,22 @@
+apiVersion: v2
+name: slaking
+description: A Kubernetes service that monitors workloads for annotations and sends filtered logs to Slack channels
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - kubernetes
+  - slack
+  - logging
+  - monitoring
+  - operator
+home: https://github.com/ElementTech/slaking
+sources:
+  - https://github.com/ElementTech/slaking
+maintainers:
+  - name: ElementTech
+    email: elementtech@example.com
+icon: https://raw.githubusercontent.com/ElementTech/slaking/main/icon.png
+annotations:
+  category: Monitoring
+  licenses: MIT 

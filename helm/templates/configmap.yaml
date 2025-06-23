@@ -1,0 +1,52 @@
+{{- if .Values.configMap.create -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "slaking.fullname" . }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "slaking.labels" . | nindent 4 }}
+data:
+  config.json: |
+    {
+      "slack": {
+        "defaultChannel": {{ .Values.config.slack.defaultChannel | quote }},
+        "rateLimit": {{ .Values.config.slack.rateLimit }},
+        "retryAttempts": {{ .Values.config.slack.retryAttempts }},
+        "retryDelay": {{ .Values.config.slack.retryDelay }}
+      },
+      "kubernetes": {
+        "namespaces": {{ .Values.config.kubernetes.namespaces | toJson }},
+        "watchInterval": {{ .Values.config.kubernetes.watchInterval }},
+        "logBufferSize": {{ .Values.config.kubernetes.logBufferSize }},
+        "maxLogLines": {{ .Values.config.kubernetes.maxLogLines }},
+        "defaultCooldown": {{ .Values.config.kubernetes.defaultCooldown }}
+      },
+      "logging": {
+        "level": {{ .Values.config.logging.level | quote }},
+        "format": {{ .Values.config.logging.format | quote }},
+        "maxFiles": {{ .Values.config.logging.maxFiles }},
+        "maxSize": {{ .Values.config.logging.maxSize | quote }}
+      },
+      "monitoring": {
+        "metricsPort": {{ .Values.config.monitoring.metricsPort }},
+        "healthCheckInterval": {{ .Values.config.monitoring.healthCheckInterval }},
+        "prometheusEnabled": {{ .Values.config.monitoring.prometheusEnabled }}
+      },
+      "filters": {
+        "defaultLevel": {{ .Values.config.filters.defaultLevel | quote }},
+        "defaultPattern": {{ .Values.config.filters.defaultPattern | quote }},
+        "excludePatterns": {{ .Values.config.filters.excludePatterns | toJson }}
+      },
+      "annotations": {
+        "enabled": {{ .Values.config.annotations.enabled | quote }},
+        "channel": {{ .Values.config.annotations.channel | quote }},
+        "filters": {{ .Values.config.annotations.filters | quote }},
+        "level": {{ .Values.config.annotations.level | quote }},
+        "includeLabels": {{ .Values.config.annotations.includeLabels | quote }},
+        "excludeLabels": {{ .Values.config.annotations.excludeLabels | quote }},
+        "maxLines": {{ .Values.config.annotations.maxLines | quote }},
+        "cooldown": {{ .Values.config.annotations.cooldown | quote }}
+      }
+    }
+{{- end }} 

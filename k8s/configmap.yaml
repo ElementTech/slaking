@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: slaking-config
+  namespace: slaking
+  labels:
+    app: slaking
+data:
+  config.json: |
+    {
+      "slack": {
+        "defaultChannel": "#general",
+        "rateLimit": 1000,
+        "retryAttempts": 3,
+        "retryDelay": 5000
+      },
+      "kubernetes": {
+        "namespaces": [],
+        "watchInterval": 30000,
+        "logBufferSize": 100,
+        "maxLogLines": 10,
+        "defaultCooldown": 60
+      },
+      "logging": {
+        "level": "info",
+        "format": "json",
+        "maxFiles": 5,
+        "maxSize": "10m"
+      },
+      "monitoring": {
+        "metricsPort": 9090,
+        "healthCheckInterval": 30000,
+        "prometheusEnabled": true
+      },
+      "filters": {
+        "defaultLevel": "info",
+        "defaultPattern": ".*",
+        "excludePatterns": [
+          "health check",
+          "heartbeat",
+          "ping"
+        ]
+      },
+      "annotations": {
+        "enabled": "slaking.enabled",
+        "channel": "slaking.channel",
+        "filters": "slaking.filters",
+        "level": "slaking.level",
+        "includeLabels": "slaking.include-labels",
+        "excludeLabels": "slaking.exclude-labels",
+        "maxLines": "slaking.max-lines",
+        "cooldown": "slaking.cooldown"
+      }
+    } 

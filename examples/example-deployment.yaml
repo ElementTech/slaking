@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-app
+  namespace: default
+  labels:
+    app: example-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: example-app
+  template:
+    metadata:
+      labels:
+        app: example-app
+        environment: production
+      annotations:
+        # Enable Slaking for this deployment
+        slaking.enabled: "true"
+        # Send logs to #alerts channel
+        slaking.channel: "#product-analytics-alerts-dev"
+        # Filter for error, exception, or fatal logs
+        slaking.filters: ""
+        # Only send logs with error level or higher
+        slaking.level: "info"
+        # Only include pods with specific labels
+        slaking.include-labels: "app=example-app,environment=production"
+        # Maximum 5 lines per message
+        slaking.max-lines: "5"
+        # Wait 30 seconds between messages
+        slaking.cooldown: "60"
+    spec:
+      containers:
+      - name: app
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        # Example of generating some logs
+        command: ["/bin/sh"]
+        args:
+        - -c
+        - |
+          while true; do
+            echo "INFO: Application is running normally"
+            sleep 10
+            echo "ERROR: Something went wrong!"
+            sleep 10
+            echo "FATAL: Critical error occurred"
+            sleep 10
+          done 

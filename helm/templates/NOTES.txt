@@ -1,0 +1,105 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your release is named {{ .Release.Name }}.
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }}
+  $ helm get all {{ .Release.Name }}
+
+{{- if .Values.ingress.enabled }}
+{{- range $host := .Values.ingress.hosts }}
+  {{- range .paths }}
+  The application will be available at:
+    {{- if $.Values.ingress.tls }}
+    https://{{ $host.host }}{{ .path }}
+    {{- else }}
+    http://{{ $host.host }}{{ .path }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- else if contains "NodePort" .Values.service.type }}
+  Get the application URL by running these commands:
+{{- if .Values.global.clusterDomain }}
+  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "slaking.fullname" . }})
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
+{{- else }}
+  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "slaking.fullname" . }})
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
+{{- end }}
+{{- else if contains "LoadBalancer" .Values.service.type }}
+  Get the application URL by running these commands:
+     NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+           You can watch the status of by running 'kubectl get --namespace {{ .Release.Namespace }} svc -w {{ include "slaking.fullname" . }}'
+  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "slaking.fullname" . }} --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  echo http://$SERVICE_IP:{{ .Values.service.port }}
+{{- else if contains "ClusterIP" .Values.service.type }}
+  Get the application URL by running these commands:
+  export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "{{ include "slaking.selectorLabels" . }}" -o jsonpath="{.items[0].metadata.name}")
+  export CONTAINER_PORT=$(kubectl get pod --namespace {{ .Release.Namespace }} $POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
+  echo "Visit http://127.0.0.1:8080 to use your application"
+  kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8080:$CONTAINER_PORT
+{{- end }}
+
+{{- if .Values.serviceMonitor.enabled }}
+Prometheus ServiceMonitor has been created for metrics collection.
+{{- end }}
+
+{{- if .Values.hpa.enabled }}
+Horizontal Pod Autoscaler has been enabled with:
+  - Min replicas: {{ .Values.hpa.minReplicas }}
+  - Max replicas: {{ .Values.hpa.maxReplicas }}
+{{- if .Values.hpa.targetCPUUtilizationPercentage }}
+  - Target CPU utilization: {{ .Values.hpa.targetCPUUtilizationPercentage }}%
+{{- end }}
+{{- if .Values.hpa.targetMemoryUtilizationPercentage }}
+  - Target memory utilization: {{ .Values.hpa.targetMemoryUtilizationPercentage }}%
+{{- end }}
+{{- end }}
+
+Useful commands:
+
+  # Check the status of the deployment
+  kubectl get pods -n {{ .Release.Namespace }} -l "{{ include "slaking.selectorLabels" . }}"
+
+  # View logs
+  kubectl logs -n {{ .Release.Namespace }} -l "{{ include "slaking.selectorLabels" . }}"
+
+  # Check service endpoints
+  kubectl get endpoints -n {{ .Release.Namespace }} {{ include "slaking.fullname" . }}
+
+  # Test health endpoint
+  kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "slaking.fullname" . }} 3000:3000
+  curl http://localhost:3000/health
+
+  # View metrics
+  kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "slaking.fullname" . }}-metrics 9090:9090
+  curl http://localhost:9090/metrics
+
+  # Check configuration
+  kubectl get configmap -n {{ .Release.Namespace }} {{ include "slaking.fullname" . }}-config -o yaml
+
+  # Update configuration
+  helm upgrade {{ .Release.Name }} . --set config.slack.defaultChannel="#new-channel"
+
+{{- if .Values.secret.create }}
+  # Check if Slack token is set
+  kubectl get secret -n {{ .Release.Namespace }} {{ include "slaking.fullname" . }}-secrets -o jsonpath='{.data.slack-token}' | base64 -d | wc -c
+{{- end }}
+
+To configure workloads for log forwarding, add these annotations to your pods:
+
+```yaml
+metadata:
+  annotations:
+    slaking.enabled: "true"
+    slaking.channel: "#alerts"
+    slaking.filters: "error|exception|fatal"
+    slaking.level: "error"
+    slaking.max-lines: "10"
+    slaking.cooldown: "60"
+```
+
+For more information, visit: https://github.com/your-org/slaking 
