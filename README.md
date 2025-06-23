@@ -42,27 +42,6 @@
 
 ## 🚀 Deployment Options
 
-### Prerequisites for Helm Repository
-
-Before installing from the Helm repository, ensure the GitHub Pages repository is set up:
-
-1. **Enable GitHub Pages**:
-   - Go to your repository Settings → Pages
-   - Set Source to "Deploy from a branch"
-   - Select the `gh-pages` branch
-   - Save the settings
-
-2. **Trigger Chart Release**:
-   - The chart-releaser action will automatically run on pushes to `main`
-   - It will create the `gh-pages` branch and publish the chart
-   - You can manually trigger it by pushing changes to the `charts/slaking/` directory
-
-3. **Verify Repository**:
-   ```bash
-   # Check if the repository is available
-   curl https://elementtech.github.io/slaking/index.yaml
-   ```
-
 ### Option 1: Helm Chart (Recommended) 🦥
 
 The easiest way to deploy Slaking is using the provided Helm chart from the GitHub Pages repository:
@@ -288,26 +267,6 @@ helm upgrade slaking slaking/slaking \
   --reuse-values
 ```
 
-## 🛠️ Development
-
-### Local Development
-
-```bash
-npm run dev
-```
-
-### Testing
-
-```bash
-npm test
-```
-
-### Building Docker Image
-
-```bash
-npm run build
-```
-
 ## 🔌 API Endpoints
 
 - `GET /health` - Health check (Slaking's vital signs)
@@ -497,14 +456,6 @@ The service requires minimal permissions:
 
 - Slack token is stored in Kubernetes Secret
 - Consider using external secret management (HashiCorp Vault, AWS Secrets Manager, etc.)
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
 
 ---
 
