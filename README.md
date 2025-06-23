@@ -26,6 +26,27 @@ A Kubernetes service that monitors workloads for specific annotations and sends 
 
 ## Deployment Options
 
+### Prerequisites for Helm Repository
+
+Before installing from the Helm repository, ensure the GitHub Pages repository is set up:
+
+1. **Enable GitHub Pages**:
+   - Go to your repository Settings → Pages
+   - Set Source to "Deploy from a branch"
+   - Select the `gh-pages` branch
+   - Save the settings
+
+2. **Trigger Chart Release**:
+   - The chart-releaser action will automatically run on pushes to `main`
+   - It will create the `gh-pages` branch and publish the chart
+   - You can manually trigger it by pushing changes to the `helm/` directory
+
+3. **Verify Repository**:
+   ```bash
+   # Check if the repository is available
+   curl https://elementtech.github.io/slaking/index.yaml
+   ```
+
 ### Option 1: Helm Chart (Recommended)
 
 The easiest way to deploy Slaking is using the provided Helm chart from the GitHub Pages repository:
@@ -271,6 +292,12 @@ Create separate values files for different environments:
 3. **Permission denied**
    - Ensure proper RBAC configuration
    - Check service account permissions
+
+4. **Helm repository not found (404 error)**
+   - Ensure GitHub Pages is enabled for the `gh-pages` branch
+   - Check that the chart-releaser action has run successfully
+   - Verify the repository URL is correct: `https://elementtech.github.io/slaking`
+   - Wait a few minutes after pushing changes for GitHub Pages to update
 
 ### Debug Mode
 

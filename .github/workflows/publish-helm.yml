@@ -4,9 +4,10 @@ on:
   push:
     branches:
       - main
-    # paths:
-    #   - 'helm/**'
-    #   - '.github/workflows/publish-helm.yml'
+    paths:
+      - 'helm/**'
+      - '.github/workflows/publish-helm.yml'
+      - 'cr.yaml'
 
 permissions:
   contents: write
@@ -30,4 +31,5 @@ jobs:
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         with:
-          charts_dir: helm 
+          charts_dir: helm
+          config: cr.yaml 
