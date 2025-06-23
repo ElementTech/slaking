@@ -155,6 +155,11 @@ configMap:
   create: true
   name: ""
 
+# Secret configuration
+secret:
+  create: false
+  name: ""
+
 # ServiceMonitor for Prometheus Operator
 serviceMonitor:
   enabled: false
@@ -180,6 +185,10 @@ hpa:
   maxReplicas: 3
   targetCPUUtilizationPercentage: 80
   targetMemoryUtilizationPercentage: 80
+
+# Autoscaling configuration
+autoscaling:
+  enabled: false
 
 # NetworkPolicy
 networkPolicy:
