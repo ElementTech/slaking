@@ -12,7 +12,7 @@ image:
   repository: slaking
   tag: "latest"
   pullPolicy: IfNotPresent
-  registry: ""
+  registry: "ghcr.io/elementtech"
 
 # Image pull secrets
 imagePullSecrets: []
