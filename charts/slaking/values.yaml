@@ -105,6 +105,7 @@ config:
     retryDelay: 5000
   kubernetes:
     namespaces: []
+    watchAllNamespaces: true
     watchInterval: 30000
     logBufferSize: 100
     maxLogLines: 10
@@ -137,13 +138,14 @@ config:
 
 # Environment variables
 env:
-  SLACK_TOKEN: ""
-  SLACK_DEFAULT_CHANNEL: ""
-  SLACK_RATE_LIMIT: ""
-  K8S_NAMESPACES: ""
-  K8S_WATCH_INTERVAL: ""
-  LOG_LEVEL: ""
-  METRICS_PORT: ""
+  # SLACK_TOKEN: ""
+  # SLACK_DEFAULT_CHANNEL: ""
+  # SLACK_RATE_LIMIT: ""
+  # K8S_NAMESPACES: ""
+  # K8S_WATCH_ALL_NAMESPACES: "true"
+  # K8S_WATCH_INTERVAL: ""
+  # LOG_LEVEL: ""
+  # METRICS_PORT: ""
   PORT: "3000"
   NODE_ENV: "production"
   CONFIG_PATH: "/app/config/config.json"

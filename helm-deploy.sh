@@ -104,6 +104,7 @@ env:
   SLACK_DEFAULT_CHANNEL: "${SLACK_DEFAULT_CHANNEL:-#general}"
   SLACK_RATE_LIMIT: "${SLACK_RATE_LIMIT:-1000}"
   K8S_NAMESPACES: "${K8S_NAMESPACES:-}"
+  K8S_WATCH_ALL_NAMESPACES: "${K8S_WATCH_ALL_NAMESPACES:-true}"
   K8S_WATCH_INTERVAL: "${K8S_WATCH_INTERVAL:-30000}"
   LOG_LEVEL: "${LOG_LEVEL:-info}"
   METRICS_PORT: "${METRICS_PORT:-9090}"
@@ -122,6 +123,7 @@ config:
     rateLimit: ${SLACK_RATE_LIMIT:-1000}
   kubernetes:
     namespaces: ${K8S_NAMESPACES:-[]}
+    watchAllNamespaces: ${K8S_WATCH_ALL_NAMESPACES:-true}
     watchInterval: ${K8S_WATCH_INTERVAL:-30000}
   logging:
     level: "${LOG_LEVEL:-info}"

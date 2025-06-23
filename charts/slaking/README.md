@@ -113,12 +113,34 @@ env:
 | `SLACK_TOKEN` | Slack bot token | Required |
 | `SLACK_DEFAULT_CHANNEL` | Default Slack channel | `#general` |
 | `SLACK_RATE_LIMIT` | Rate limit in ms | `1000` |
-| `K8S_NAMESPACES` | Comma-separated namespaces | All namespaces |
+| `K8S_WATCH_ALL_NAMESPACES` | Watch all namespaces (true/false) | `true` |
+| `K8S_NAMESPACES` | Comma-separated namespaces | All namespaces (when K8S_WATCH_ALL_NAMESPACES=true) |
 | `K8S_WATCH_INTERVAL` | Watch interval in ms | `30000` |
 | `LOG_LEVEL` | Logging level | `info` |
 | `METRICS_PORT` | Metrics port | `9090` |
 | `PORT` | HTTP port | `3000` |
 | `NODE_ENV` | Environment | `production` |
+
+### Namespace Configuration
+
+The chart supports two modes for watching Kubernetes namespaces:
+
+#### Watch All Namespaces (Default)
+By default, the chart watches all namespaces in your cluster:
+
+```bash
+helm install slaking ./ \
+  --set env.K8S_WATCH_ALL_NAMESPACES="true"
+```
+
+#### Watch Specific Namespaces Only
+To limit monitoring to specific namespaces:
+
+```bash
+helm install slaking ./ \
+  --set env.K8S_WATCH_ALL_NAMESPACES="false" \
+  --set env.K8S_NAMESPACES="production,staging,monitoring"
+```
 
 ### Advanced Configuration
 
@@ -236,7 +258,10 @@ config:
   slack:
     defaultChannel: "#prod-alerts"
   kubernetes:
-    namespaces: ["production", "staging"]
+    watchAllNamespaces: true
+    namespaces: []
+env:
+  K8S_WATCH_ALL_NAMESPACES: "true"
 ```
 
 **values-staging.yaml:**
@@ -249,7 +274,11 @@ config:
   slack:
     defaultChannel: "#staging-alerts"
   kubernetes:
+    watchAllNamespaces: false
     namespaces: ["staging"]
+env:
+  K8S_WATCH_ALL_NAMESPACES: "false"
+  K8S_NAMESPACES: "staging"
 ```
 
 **values-development.yaml:**
@@ -261,9 +290,13 @@ config:
   slack:
     defaultChannel: "#dev-logs"
   kubernetes:
+    watchAllNamespaces: false
     namespaces: ["development"]
   logging:
     level: "debug"
+env:
+  K8S_WATCH_ALL_NAMESPACES: "false"
+  K8S_NAMESPACES: "development"
 ```
 
 ## Upgrading

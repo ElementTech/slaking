@@ -153,9 +153,44 @@ curl http://localhost:3000/health
 | `SLACK_TOKEN` | Slack bot token | Required |
 | `SLACK_DEFAULT_CHANNEL` | Default Slack channel | `#general` |
 | `SLACK_RATE_LIMIT` | Rate limit in ms | `1000` |
-| `K8S_NAMESPACES` | Comma-separated namespaces to watch | All namespaces |
+| `K8S_WATCH_ALL_NAMESPACES` | Watch all namespaces (true/false) | `true` |
+| `K8S_NAMESPACES` | Comma-separated namespaces to watch | All namespaces (when K8S_WATCH_ALL_NAMESPACES=true) |
 | `LOG_LEVEL` | Logging level | `info` |
 | `PORT` | HTTP server port | `3000` |
+
+### Namespace Configuration
+
+Slaking supports two modes for watching Kubernetes namespaces:
+
+#### Watch All Namespaces (Default)
+By default, Slaking watches all namespaces in your cluster. This is the recommended configuration for most use cases.
+
+```bash
+# Environment configuration
+K8S_WATCH_ALL_NAMESPACES=true
+# K8S_NAMESPACES can be left empty or unset
+```
+
+**Benefits:**
+- Automatically picks up new namespaces
+- No need to maintain a list of namespaces
+- Works with any workload regardless of namespace
+- Simpler configuration
+
+#### Watch Specific Namespaces Only
+For environments where you want to limit Slaking's scope to specific namespaces.
+
+```bash
+# Environment configuration
+K8S_WATCH_ALL_NAMESPACES=false
+K8S_NAMESPACES=production,staging,monitoring
+```
+
+**Use Cases:**
+- Multi-tenant clusters with namespace isolation
+- Performance optimization for large clusters
+- Security requirements limiting cross-namespace access
+- Testing in specific environments only
 
 ### Workload Annotations
 

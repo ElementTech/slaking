@@ -67,6 +67,7 @@ class ConfigManager {
       },
       kubernetes: {
         namespaces: [], // empty means all namespaces
+        watchAllNamespaces: true, // new option to explicitly enable watching all namespaces
         watchInterval: 30000, // ms
         logBufferSize: 100,
         maxLogLines: 10,
@@ -119,8 +120,21 @@ class ConfigManager {
 
     // Kubernetes configuration
     if (process.env.K8S_NAMESPACES) {
-      this.config.kubernetes.namespaces = process.env.K8S_NAMESPACES.split(',').map(ns => ns.trim());
+      const namespaces = process.env.K8S_NAMESPACES.split(',').map(ns => ns.trim()).filter(ns => ns.length > 0);
+      this.config.kubernetes.namespaces = namespaces;
+      // If specific namespaces are provided, disable watch all namespaces
+      this.config.kubernetes.watchAllNamespaces = namespaces.length === 0;
     }
+    
+    // New environment variable to explicitly control watching all namespaces
+    if (process.env.K8S_WATCH_ALL_NAMESPACES) {
+      this.config.kubernetes.watchAllNamespaces = process.env.K8S_WATCH_ALL_NAMESPACES.toLowerCase() === 'true';
+      // If watching all namespaces, clear the specific namespaces list
+      if (this.config.kubernetes.watchAllNamespaces) {
+        this.config.kubernetes.namespaces = [];
+      }
+    }
+    
     if (process.env.K8S_WATCH_INTERVAL) {
       this.config.kubernetes.watchInterval = parseInt(process.env.K8S_WATCH_INTERVAL);
     }
@@ -232,9 +246,17 @@ class ConfigManager {
   }
 
   isNamespaceWatched(namespace) {
-    if (this.config.kubernetes.namespaces.length === 0) {
-      return true; // Watch all namespaces
+    // If watchAllNamespaces is explicitly enabled, watch all namespaces
+    if (this.config.kubernetes.watchAllNamespaces) {
+      return true;
     }
+    
+    // If no specific namespaces are configured, watch all namespaces (backward compatibility)
+    if (this.config.kubernetes.namespaces.length === 0) {
+      return true;
+    }
+    
+    // Otherwise, only watch specified namespaces
     return this.config.kubernetes.namespaces.includes(namespace);
   }
 
@@ -293,6 +315,7 @@ class ConfigManager {
       configPath: this.configPath,
       hasSlackToken: !!this.config?.slack?.token,
       watchedNamespaces: this.config?.kubernetes?.namespaces || [],
+      watchAllNamespaces: this.config?.kubernetes?.watchAllNamespaces || false,
       logLevel: this.config?.logging?.level
     };
   }

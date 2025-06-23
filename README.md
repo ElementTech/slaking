@@ -2,7 +2,7 @@
 
 > *"The laziest Pokémon that monitors your Kubernetes workloads while you take a nap!"*
 
-![Slaking Pokémon](https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/289.png)
+<img src="https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/289.png" alt="Slaking Pokémon" width="200" height="200">
 
 ```
     ╭─────────────────────────────────────────────────────────────╮
@@ -67,22 +67,36 @@ Before installing from the Helm repository, ensure the GitHub Pages repository i
 
 The easiest way to deploy Slaking is using the provided Helm chart from the GitHub Pages repository:
 
+#### Watch All Namespaces (Recommended)
 ```bash
 # Add the Helm repository
 helm repo add slaking https://elementtech.github.io/slaking
 helm repo update
 
-# Install the chart - Wake up Slaking!
+# Install the chart - Wake up Slaking to watch ALL namespaces!
 helm install slaking slaking/slaking \
   --namespace slaking \
   --create-namespace \
   --set env.SLACK_TOKEN="xoxb-your-token" \
-  --set env.SLACK_DEFAULT_CHANNEL="#alerts"
+  --set env.SLACK_DEFAULT_CHANNEL="#alerts" \
+  --set env.K8S_WATCH_ALL_NAMESPACES="true"
+```
+
+#### Watch Specific Namespaces Only
+```bash
+# Install the chart to watch specific namespaces only
+helm install slaking slaking/slaking \
+  --namespace slaking \
+  --create-namespace \
+  --set env.SLACK_TOKEN="xoxb-your-token" \
+  --set env.SLACK_DEFAULT_CHANNEL="#alerts" \
+  --set env.K8S_WATCH_ALL_NAMESPACES="false" \
+  --set env.K8S_NAMESPACES="production,staging,monitoring"
 ```
 
 **Alternative: Install from local chart directory (if you have the source code):**
 ```bash
-# Quick deployment with automated script
+# Quick deployment with automated script (watches all namespaces by default)
 ./helm-deploy.sh
 
 # Manual Helm deployment from local chart
@@ -90,7 +104,8 @@ helm install slaking ./charts/slaking \
   --namespace slaking \
   --create-namespace \
   --set env.SLACK_TOKEN="xoxb-your-token" \
-  --set env.SLACK_DEFAULT_CHANNEL="#alerts"
+  --set env.SLACK_DEFAULT_CHANNEL="#alerts" \
+  --set env.K8S_WATCH_ALL_NAMESPACES="true"
 ```
 
 **Benefits of Helm deployment:**
@@ -144,6 +159,55 @@ metadata:
 | `slaking.max-lines` | Maximum lines per message | `10` |
 | `slaking.cooldown` | Cooldown period between messages (seconds) | `60` |
 
+### Namespace Configuration
+
+Slaking supports two modes for watching Kubernetes namespaces:
+
+#### 🦥 Watch All Namespaces (Recommended)
+This is the default and recommended configuration. Slaking will monitor all namespaces in your cluster and only process logs from workloads that have the `slaking.enabled: "true"` annotation.
+
+**Environment Configuration:**
+```bash
+# Set to watch all namespaces
+K8S_WATCH_ALL_NAMESPACES=true
+# Leave K8S_NAMESPACES empty or unset
+```
+
+**Helm Configuration:**
+```bash
+helm install slaking slaking/slaking \
+  --set env.K8S_WATCH_ALL_NAMESPACES="true"
+```
+
+**Benefits:**
+- ✅ No need to specify namespaces manually
+- ✅ Automatically picks up new namespaces
+- ✅ Works with any workload regardless of namespace
+- ✅ Simpler configuration and maintenance
+
+#### 🎯 Watch Specific Namespaces Only
+For environments where you want to limit Slaking's scope to specific namespaces (e.g., for security or performance reasons).
+
+**Environment Configuration:**
+```bash
+# Disable watching all namespaces
+K8S_WATCH_ALL_NAMESPACES=false
+# Specify namespaces to watch
+K8S_NAMESPACES=production,staging,monitoring
+```
+
+**Helm Configuration:**
+```bash
+helm install slaking slaking/slaking \
+  --set env.K8S_WATCH_ALL_NAMESPACES="false" \
+  --set env.K8S_NAMESPACES="production,staging,monitoring"
+```
+
+**Use Cases:**
+- 🔒 Multi-tenant clusters where you want to isolate monitoring
+- 🚀 Performance optimization for large clusters
+- 🛡️ Security requirements that limit cross-namespace access
+
 ## 🎮 Installation
 
 ### Prerequisites
@@ -163,11 +227,13 @@ metadata:
    helm repo update
    
    # Install with your Slack configuration - Time to wake up Slaking!
+   # This will watch ALL namespaces by default
    helm install slaking slaking/slaking \
      --namespace slaking \
      --create-namespace \
      --set env.SLACK_TOKEN="xoxb-your-token" \
-     --set env.SLACK_DEFAULT_CHANNEL="#alerts"
+     --set env.SLACK_DEFAULT_CHANNEL="#alerts" \
+     --set env.K8S_WATCH_ALL_NAMESPACES="true"
    ```
 
 2. **Alternative: Local development setup:**
@@ -180,6 +246,7 @@ metadata:
    # Set up environment variables
    cp env.example .env
    # Edit .env with your Slack token and other settings
+   # By default, it will watch all namespaces
    
    # Deploy using automated script
    ./helm-deploy.sh
@@ -196,9 +263,22 @@ helm repo update
 # Check available versions
 helm search repo slaking/slaking
 
-# Upgrade to latest version
+# Upgrade to latest version (maintains current namespace configuration)
 helm upgrade slaking slaking/slaking \
   --namespace slaking \
+  --reuse-values
+
+# Upgrade and change to watch all namespaces
+helm upgrade slaking slaking/slaking \
+  --namespace slaking \
+  --set env.K8S_WATCH_ALL_NAMESPACES="true" \
+  --reuse-values
+
+# Upgrade and change to watch specific namespaces only
+helm upgrade slaking slaking/slaking \
+  --namespace slaking \
+  --set env.K8S_WATCH_ALL_NAMESPACES="false" \
+  --set env.K8S_NAMESPACES="production,staging" \
   --reuse-values
 
 # Or upgrade to a specific version
@@ -234,7 +314,7 @@ npm run build
 - `GET /metrics` - Prometheus metrics (Slaking's stats)
 - `POST /config` - Update configuration
 - `GET /config` - Get current configuration
-- `GET /status` - Service status
+- `GET /status` - Service status (includes namespace configuration)
 
 ## 📊 Monitoring
 
@@ -280,7 +360,16 @@ config:
   slack:
     defaultChannel: "#prod-alerts"
   kubernetes:
-    namespaces: ["production", "staging"]
+    # Watch all namespaces (recommended)
+    watchAllNamespaces: true
+    namespaces: []
+    # OR watch specific namespaces only
+    # watchAllNamespaces: false
+    # namespaces: ["production", "staging"]
+env:
+  SLACK_TOKEN: "xoxb-your-token"
+  K8S_WATCH_ALL_NAMESPACES: "true"
+  # K8S_NAMESPACES: "production,staging"  # Only needed if watchAllNamespaces: false
 ```
 
 ### Multi-Environment Setup
