@@ -28,13 +28,27 @@ A Kubernetes service that monitors workloads for specific annotations and sends 
 
 ### Option 1: Helm Chart (Recommended)
 
-The easiest way to deploy Slaking is using the provided Helm chart:
+The easiest way to deploy Slaking is using the provided Helm chart from the GitHub Pages repository:
 
+```bash
+# Add the Helm repository
+helm repo add slaking https://elementtech.github.io/slaking
+helm repo update
+
+# Install the chart
+helm install slaking slaking/slaking \
+  --namespace slaking \
+  --create-namespace \
+  --set env.SLACK_TOKEN="xoxb-your-token" \
+  --set env.SLACK_DEFAULT_CHANNEL="#alerts"
+```
+
+**Alternative: Install from local chart directory (if you have the source code):**
 ```bash
 # Quick deployment with automated script
 ./helm-deploy.sh
 
-# Manual Helm deployment
+# Manual Helm deployment from local chart
 helm install slaking ./helm \
   --namespace slaking \
   --create-namespace \
@@ -105,31 +119,57 @@ metadata:
 
 ### Quick Start
 
-1. **Clone and install dependencies:**
+1. **Install from Helm repository (Recommended):**
    ```bash
-   cd slack-o-tron
-   npm install
+   # Add the Helm repository
+   helm repo add slaking https://elementtech.github.io/slaking
+   helm repo update
+   
+   # Install with your Slack configuration
+   helm install slaking slaking/slaking \
+     --namespace slaking \
+     --create-namespace \
+     --set env.SLACK_TOKEN="xoxb-your-token" \
+     --set env.SLACK_DEFAULT_CHANNEL="#alerts"
    ```
 
-2. **Set up environment variables:**
+2. **Alternative: Local development setup:**
    ```bash
+   # Clone and install dependencies
+   git clone https://github.com/ElementTech/slaking.git
+   cd slaking
+   npm install
+   
+   # Set up environment variables
    cp env.example .env
    # Edit .env with your Slack token and other settings
-   ```
-
-3. **Deploy to Kubernetes:**
-
-   **Using Helm (Recommended):**
-   ```bash
+   
+   # Deploy using automated script
    ./helm-deploy.sh
    ```
 
-   **Using vanilla manifests:**
-   ```bash
-   ./deploy.sh
-   ```
+3. **Configure your workloads with annotations and watch logs flow to Slack!**
 
-4. **Configure your workloads with annotations and watch logs flow to Slack!**
+### Updating the Helm Chart
+
+```bash
+# Update the repository
+helm repo update
+
+# Check available versions
+helm search repo slaking/slaking
+
+# Upgrade to latest version
+helm upgrade slaking slaking/slaking \
+  --namespace slaking \
+  --reuse-values
+
+# Or upgrade to a specific version
+helm upgrade slaking slaking/slaking \
+  --namespace slaking \
+  --version 1.0.1 \
+  --reuse-values
+```
 
 ## Development
 
@@ -234,17 +274,19 @@ Create separate values files for different environments:
 
 ### Debug Mode
 
-**Helm deployment:**
+**Repository-based Helm deployment:**
+```bash
+helm upgrade slaking slaking/slaking \
+  --namespace slaking \
+  --set env.LOG_LEVEL=debug \
+  --reuse-values
+```
+
+**Local Helm deployment:**
 ```bash
 helm upgrade slaking ./helm \
   --namespace slaking \
   --set env.LOG_LEVEL=debug
-```
-
-**Vanilla deployment:**
-```bash
-kubectl patch deployment slaking -n slaking \
-  -p '{"spec":{"template":{"spec":{"containers":[{"name":"slaking","env":[{"name":"LOG_LEVEL","value":"debug"}]}]}}}}'
 ```
 
 ### Testing Configuration
@@ -261,7 +303,31 @@ curl http://localhost:9090/metrics
 
 ## Management Commands
 
-### Helm Deployment
+### Helm Deployment (Repository-based)
+
+```bash
+# Check status
+helm list -n slaking
+kubectl get pods -n slaking
+
+# View logs
+kubectl logs -n slaking -l app=slaking
+
+# Test deployment
+kubectl port-forward -n slaking svc/slaking 3000:3000
+curl http://localhost:3000/health
+
+# Upgrade deployment
+helm upgrade slaking slaking/slaking \
+  --namespace slaking \
+  --reuse-values
+
+# Uninstall
+helm uninstall slaking -n slaking
+kubectl delete namespace slaking
+```
+
+### Helm Deployment (Local chart)
 
 ```bash
 # Check status
@@ -278,22 +344,6 @@ curl http://localhost:9090/metrics
 
 # Uninstall
 ./helm-deploy.sh uninstall
-```
-
-### Vanilla Deployment
-
-```bash
-# Check status
-kubectl get pods -n slaking
-
-# View logs
-kubectl logs -n slaking -l app=slaking
-
-# Update deployment
-kubectl apply -f k8s/
-
-# Delete deployment
-kubectl delete -f k8s/
 ```
 
 ## Security Considerations
