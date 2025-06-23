@@ -138,7 +138,7 @@ config:
 
 # Environment variables
 env:
-  # SLACK_TOKEN: ""
+  SLACK_TOKEN: ""
   # SLACK_DEFAULT_CHANNEL: ""
   # SLACK_RATE_LIMIT: ""
   # K8S_NAMESPACES: ""
@@ -149,14 +149,6 @@ env:
   PORT: "3000"
   NODE_ENV: "production"
   CONFIG_PATH: "/app/config/config.json"
-
-# Secret configuration
-secret:
-  create: false
-  name: ""
-  type: Opaque
-  data:
-    "slack-token": ""
 
 # ConfigMap configuration
 configMap:

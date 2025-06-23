@@ -130,13 +130,6 @@ spec:
           value: {{ $value | quote }}
         {{- end }}
         {{- end }}
-        {{- if .Values.secret.create }}
-        - name: SLACK_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: {{ include "slaking.fullname" . }}-secrets
-              key: "slack-token"
-        {{- end }}
         {{- if .Values.configMap.create }}
         - name: CONFIG_PATH
           value: "/app/config/config.json"
