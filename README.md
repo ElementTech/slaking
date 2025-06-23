@@ -2,6 +2,8 @@
 
 > *"The laziest Pokémon that monitors your Kubernetes workloads while you take a nap!"*
 
+![Slaking Pokémon](https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/289.png)
+
 ```
     ╭─────────────────────────────────────────────────────────────╮
     │                                                             │
