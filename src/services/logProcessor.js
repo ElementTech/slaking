@@ -32,6 +32,8 @@ class LogProcessor {
       summaryTimeout: 900000, // 15 minutes timeout for "stopped" message
       enableStoppedMessages: true // Whether to send "stopped" messages
     };
+    this.lastProcessedLine = new Map(); // Track last processed line for each stream
+    this.lastProcessedTimestamp = new Map(); // Track last processed timestamp for each stream
   }
 
   async initialize() {
@@ -60,7 +62,9 @@ class LogProcessor {
         buffer: [],
         lastSent: 0,
         isActive: true,
-        interval: null
+        interval: null,
+        lastProcessedLine: null, // Track last processed line
+        lastProcessedTimestamp: null // Track last processed timestamp
       };
 
       this.activeStreams.set(streamKey, logStream);
@@ -114,9 +118,31 @@ class LogProcessor {
     }
 
     const lines = chunk.split('\n').filter(line => line.trim());
-    
-    for (const line of lines) {
-      if (this.shouldProcessLine(line, logStream.config)) {
+    let newLines = lines;
+
+    // Deduplication: Only process new lines since last processed
+    if (logStream.lastProcessedLine) {
+      const lastIdx = lines.lastIndexOf(logStream.lastProcessedLine);
+      if (lastIdx !== -1 && lastIdx < lines.length - 1) {
+        newLines = lines.slice(lastIdx + 1);
+      } else if (lastIdx === lines.length - 1) {
+        newLines = [];
+      }
+    }
+
+    for (const line of newLines) {
+      // Timestamp deduplication (if possible)
+      let skip = false;
+      let lineTimestamp = null;
+      const tsMatch = line.match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?/);
+      if (tsMatch) {
+        lineTimestamp = new Date(tsMatch[0]).getTime();
+        if (logStream.lastProcessedTimestamp && lineTimestamp <= logStream.lastProcessedTimestamp) {
+          this.logger.debug(`[Dedup] Skipping old log line (timestamp): ${line}`);
+          skip = true;
+        }
+      }
+      if (!skip && this.shouldProcessLine(line, logStream.config)) {
         // Track the log pattern for consolidation
         const patternData = this.trackLogPattern(streamKey, line, logStream.config, logStream.slackService);
         
@@ -135,7 +161,15 @@ class LogProcessor {
             this.sendLogBuffer(streamKey, logStream);
           }
         }
+      } else if (!skip) {
+        this.logger.debug(`[Dedup] Skipping log line (filter/level): ${line}`);
       }
+      // Update last processed timestamp if available
+      if (lineTimestamp) {
+        logStream.lastProcessedTimestamp = lineTimestamp;
+      }
+      // Always update last processed line
+      logStream.lastProcessedLine = line;
     }
     
     // Check for stopped patterns after processing chunk
@@ -593,7 +627,7 @@ class LogProcessor {
       this.logger.debug(`Sent stopped message for pattern: ${patternData.pattern}`);
       // Remove the pattern from tracking and allow it to be reported again
       this.logPatterns.delete(patternKey);
-      // (If you want to keep the object for stats, you could instead reset isSuppressed)
+      // Clear suppression for this pattern (if any extra state is needed)
     } catch (error) {
       this.logger.error(`Failed to send stopped message for ${patternKey}`, error);
     }
