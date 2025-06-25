@@ -27,9 +27,9 @@ class LogProcessor {
     this.logPatterns = new Map(); // Track repeated log patterns
     this.consolidationTimers = new Map(); // Timers for sending consolidation summaries
     this.consolidationConfig = {
-      minRepeatCount: 3, // Minimum repeats before consolidating
-      consolidationDelay: 30000, // 30 seconds delay before sending summary
-      summaryTimeout: 300000, // 5 minutes timeout for "stopped" message
+      minRepeatCount: 10, // Minimum repeats before consolidating
+      consolidationDelay: 120000, // 2 minutes delay before sending summary
+      summaryTimeout: 900000, // 15 minutes timeout for "stopped" message
       enableStoppedMessages: true // Whether to send "stopped" messages
     };
   }
@@ -468,43 +468,34 @@ class LogProcessor {
   trackLogPattern(streamKey, line, config, slackService) {
     const pattern = this.extractLogPattern(line);
     const patternKey = this.getPatternKey(streamKey, pattern);
-    
-    if (!this.logPatterns.has(patternKey)) {
-      this.logPatterns.set(patternKey, {
+    let patternData = this.logPatterns.get(patternKey);
+    if (!patternData) {
+      patternData = {
         pattern,
-        streamKey,
+        count: 0,
+        isConsolidated: false,
+        isSuppressed: false, // NEW: suppress after first summary until resolved
+        lastSeen: Date.now(),
         config,
         slackService,
-        count: 0,
-        firstSeen: Date.now(),
-        lastSeen: Date.now(),
-        isConsolidated: false,
         consolidationTimer: null,
         stoppedTimer: null
-      });
+      };
+      this.logPatterns.set(patternKey, patternData);
     }
-    
-    const patternData = this.logPatterns.get(patternKey);
-    patternData.count++;
     patternData.lastSeen = Date.now();
-    
-    // Clear any existing stopped timer since we're seeing the pattern again
-    if (patternData.stoppedTimer) {
-      clearTimeout(patternData.stoppedTimer);
-      patternData.stoppedTimer = null;
+    if (!patternData.isSuppressed) {
+      patternData.count++;
+      if (!patternData.isConsolidated && patternData.count >= this.consolidationConfig.minRepeatCount) {
+        this.startConsolidation(patternKey, patternData);
+        patternData.isConsolidated = true;
+        patternData.isSuppressed = true; // Suppress further reporting until resolved
+      }
     }
-    
-    // Start consolidation if we haven't already and we meet the threshold
-    if (!patternData.isConsolidated && patternData.count >= this.consolidationConfig.minRepeatCount) {
-      this.startConsolidation(patternKey, patternData);
-    }
-    
     return patternData;
   }
 
   startConsolidation(patternKey, patternData) {
-    patternData.isConsolidated = true;
-    
     // Clear any existing timer
     if (patternData.consolidationTimer) {
       clearTimeout(patternData.consolidationTimer);
@@ -519,27 +510,24 @@ class LogProcessor {
   async sendConsolidationSummary(patternKey, patternData) {
     try {
       const message = this.formatConsolidationMessage(patternData);
-      
       await patternData.slackService.sendMessage(
         patternData.config.channel,
         message,
         patternData.config
       );
-      
       this.logger.debug(`Sent consolidation summary for pattern: ${patternData.pattern}`);
-      
-      // Reset count and start tracking for next consolidation
+      // Reset count but keep suppressed until resolved
       patternData.count = 0;
       patternData.isConsolidated = false;
+      // patternData.isSuppressed remains true until stopped message
       patternData.consolidationTimer = null;
-      
     } catch (error) {
       this.logger.error(`Failed to send consolidation summary for ${patternKey}`, error);
     }
   }
 
   formatConsolidationMessage(patternData) {
-    const duration = Math.round((Date.now() - patternData.firstSeen) / 1000);
+    const duration = Math.round((Date.now() - patternData.lastSeen) / 1000);
     const level = this.extractLogLevel(patternData.pattern);
     const baseInfo = `${patternData.config.podName} (${patternData.config.namespace})`;
     
@@ -591,18 +579,15 @@ class LogProcessor {
   async sendStoppedMessage(patternKey, patternData) {
     try {
       const message = this.formatStoppedMessage(patternData);
-      
       await patternData.slackService.sendMessage(
         patternData.config.channel,
         message,
         patternData.config
       );
-      
       this.logger.debug(`Sent stopped message for pattern: ${patternData.pattern}`);
-      
-      // Remove the pattern from tracking
+      // Remove the pattern from tracking and allow it to be reported again
       this.logPatterns.delete(patternKey);
-      
+      // (If you want to keep the object for stats, you could instead reset isSuppressed)
     } catch (error) {
       this.logger.error(`Failed to send stopped message for ${patternKey}`, error);
     }

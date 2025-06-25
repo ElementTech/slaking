@@ -19,7 +19,7 @@ spec:
         # Enable Slaking for this deployment
         slaking.enabled: "true"
         # Send logs to #alerts channel
-        slaking.channel: "#product-analytics-alerts-dev"
+        slaking.channel: "#test-alerts"
         # Filter for error, exception, or fatal logs
         slaking.filters: ""
         # Only send logs with error level or higher

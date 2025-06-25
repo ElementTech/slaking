@@ -69,9 +69,9 @@ class ConfigManager {
         namespaces: [], // empty means all namespaces
         watchAllNamespaces: true, // new option to explicitly enable watching all namespaces
         watchInterval: 30000, // ms
-        logBufferSize: 100,
-        maxLogLines: 10,
-        defaultCooldown: 60 // seconds
+        logBufferSize: 200,
+        maxLogLines: 25,
+        defaultCooldown: 300 // seconds
       },
       logging: {
         level: process.env.LOG_LEVEL || 'info',
@@ -85,12 +85,15 @@ class ConfigManager {
         prometheusEnabled: true
       },
       filters: {
-        defaultLevel: 'info',
+        defaultLevel: 'warn',
         defaultPattern: '.*',
         excludePatterns: [
           'health check',
           'heartbeat',
-          'ping'
+          'ping',
+          'Failed',
+          'Connection timed out',
+          'Temporary network error'
         ]
       },
       annotations: {
