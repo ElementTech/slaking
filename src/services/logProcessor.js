@@ -240,19 +240,29 @@ class LogProcessor {
   }
 
   formatLogMessage(logEntries, config) {
-    const lines = logEntries.map(entry => {
-      const timestamp = new Date(entry.timestamp).toLocaleTimeString();
-      return `[${timestamp}] ${entry.pod}/${entry.container}: ${entry.line}`;
-    });
-
-    // Determine the highest log level in the buffer
     const levels = logEntries.map(entry => this.extractLogLevel(entry.line));
     const highestLevel = this.getHighestLogLevel(levels);
-    
     const { header, color } = this.getLevelFormatting(highestLevel, config);
-    const logContent = lines.join('\n');
-    
-    return `${header}\`\`\`\n${logContent}\n\`\`\``;
+    const logContent = logEntries.map(entry => {
+      const timestamp = new Date(entry.timestamp).toLocaleTimeString();
+      return `*[${timestamp}]* \`${entry.pod}/${entry.container}\`: ${entry.line}`;
+    }).join('\n');
+    const podInfo = `*Pod:* \`${config.podName}\`\n*Namespace:* \`${config.namespace}\``;
+    return {
+      text: `${header}\n${logContent}`,
+      blocks: [
+        { type: 'header', text: { type: 'plain_text', text: header.replace(/[*_`]/g, ''), emoji: true } },
+        { type: 'section', fields: [
+            { type: 'mrkdwn', text: podInfo },
+            { type: 'mrkdwn', text: `*Log Level:* ${highestLevel.toUpperCase()}` }
+          ] },
+        { type: 'divider' },
+        { type: 'section', text: { type: 'mrkdwn', text: `\n\n\`\`\`${logContent}\`\`\`` } },
+        { type: 'context', elements: [
+            { type: 'mrkdwn', text: `:clock1: Sent at ${new Date().toLocaleString()}` }
+          ] }
+      ]
+    };
   }
 
   getHighestLogLevel(levels) {
@@ -529,35 +539,31 @@ class LogProcessor {
   formatConsolidationMessage(patternData) {
     const duration = Math.round((Date.now() - patternData.lastSeen) / 1000);
     const level = this.extractLogLevel(patternData.pattern);
-    const baseInfo = `${patternData.config.podName} (${patternData.config.namespace})`;
-    
-    // Use different emojis and titles based on the log level
-    let emoji, title;
+    const baseInfo = `*Pod:* \`${patternData.config.podName}\`\n*Namespace:* \`${patternData.config.namespace}\``;
+    let emoji, title, color;
     switch (level) {
-      case 'error':
-        emoji = '🔄';
-        title = 'Repeated Error Pattern';
-        break;
-      case 'warn':
-        emoji = '🔄';
-        title = 'Repeated Warning Pattern';
-        break;
-      case 'debug':
-        emoji = '🔄';
-        title = 'Repeated Debug Pattern';
-        break;
-      case 'info':
-      default:
-        emoji = '🔄';
-        title = 'Repeated Info Pattern';
-        break;
+      case 'error': emoji = '🔄'; title = 'Repeated Error Pattern'; color = '#e01e5a'; break;
+      case 'warn': emoji = '🔄'; title = 'Repeated Warning Pattern'; color = '#ecb22e'; break;
+      case 'debug': emoji = '🔄'; title = 'Repeated Debug Pattern'; color = '#2eb886'; break;
+      case 'info': default: emoji = '🔄'; title = 'Repeated Info Pattern'; color = '#36c5f0'; break;
     }
-    
-    const header = `${emoji} *${title}* - ${baseInfo}\n`;
-    const summary = `*Pattern repeated ${patternData.count} times* over ${duration} seconds\n`;
-    const pattern = `*Pattern:* \`${patternData.pattern}\``;
-    
-    return `${header}${summary}${pattern}`;
+    return {
+      text: `${emoji} ${title} - ${patternData.config.podName}`,
+      blocks: [
+        { type: 'header', text: { type: 'plain_text', text: `${emoji} ${title}`, emoji: true } },
+        { type: 'section', fields: [
+            { type: 'mrkdwn', text: baseInfo },
+            { type: 'mrkdwn', text: `*Log Level:* ${level.toUpperCase()}` },
+            { type: 'mrkdwn', text: `*Count:* ${patternData.count}` },
+            { type: 'mrkdwn', text: `*Duration:* ${duration} seconds` }
+          ] },
+        { type: 'divider' },
+        { type: 'section', text: { type: 'mrkdwn', text: `*Pattern:*\n\`\`\`${patternData.pattern}\`\`\`` } },
+        { type: 'context', elements: [
+            { type: 'mrkdwn', text: `:clock1: Last seen at ${new Date(patternData.lastSeen).toLocaleString()}` }
+          ] }
+      ]
+    };
   }
 
   scheduleStoppedMessage(patternKey, patternData) {
@@ -595,35 +601,30 @@ class LogProcessor {
 
   formatStoppedMessage(patternData) {
     const level = this.extractLogLevel(patternData.pattern);
-    const baseInfo = `${patternData.config.podName} (${patternData.config.namespace})`;
-    
-    // Use different emojis based on the log level
-    let emoji, title;
+    const baseInfo = `*Pod:* \`${patternData.config.podName}\`\n*Namespace:* \`${patternData.config.namespace}\``;
+    let emoji, title, color;
     switch (level) {
-      case 'error':
-        emoji = '✅';
-        title = 'Error Pattern Resolved';
-        break;
-      case 'warn':
-        emoji = '✅';
-        title = 'Warning Pattern Resolved';
-        break;
-      case 'debug':
-        emoji = '🔍';
-        title = 'Debug Pattern Stopped';
-        break;
-      case 'info':
-      default:
-        emoji = 'ℹ️';
-        title = 'Info Pattern Stopped';
-        break;
+      case 'error': emoji = '✅'; title = 'Error Pattern Resolved'; color = '#2eb886'; break;
+      case 'warn': emoji = '✅'; title = 'Warning Pattern Resolved'; color = '#2eb886'; break;
+      case 'debug': emoji = '🔍'; title = 'Debug Pattern Stopped'; color = '#36c5f0'; break;
+      case 'info': default: emoji = 'ℹ️'; title = 'Info Pattern Stopped'; color = '#36c5f0'; break;
     }
-    
-    const header = `${emoji} *${title}* - ${baseInfo}\n`;
-    const summary = `*Pattern stopped repeating* after ${patternData.count} occurrences\n`;
-    const pattern = `*Pattern:* \`${patternData.pattern}\``;
-    
-    return `${header}${summary}${pattern}`;
+    return {
+      text: `${emoji} ${title} - ${patternData.config.podName}`,
+      blocks: [
+        { type: 'header', text: { type: 'plain_text', text: `${emoji} ${title}`, emoji: true } },
+        { type: 'section', fields: [
+            { type: 'mrkdwn', text: baseInfo },
+            { type: 'mrkdwn', text: `*Log Level:* ${level.toUpperCase()}` },
+            { type: 'mrkdwn', text: `*Total Occurrences:* ${patternData.count}` }
+          ] },
+        { type: 'divider' },
+        { type: 'section', text: { type: 'mrkdwn', text: `*Pattern:*\n\`\`\`${patternData.pattern}\`\`\`` } },
+        { type: 'context', elements: [
+            { type: 'mrkdwn', text: `:white_check_mark: Resolved at ${new Date().toLocaleString()}` }
+          ] }
+      ]
+    };
   }
 
   checkForStoppedPatterns(streamKey) {
